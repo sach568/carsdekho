@@ -189,11 +189,11 @@ class AdminController extends Controller
 
     public function storeLatestCar(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        $validated = $request->validate([
+            'name' => 'required',
+            'model' => 'required',
+            'price' => 'required|numeric',
+            'image' => 'required|image',
         ]);
 
         $imagePath = $request->file('image')->store('latest-cars', 'public');
@@ -202,13 +202,14 @@ class AdminController extends Controller
             'name' => $request->name,
             'model' => $request->model,
             'price' => $request->price,
+            'features' => $request->features ?? null,
             'image' => $imagePath,
-            'features' => $request->features,
-            'active' => $request->active ?? true,
+            'active' => $request->active ?? 1,
         ]);
 
-        return redirect()->route('admin.latest-cars')->with('success', 'Latest car added successfully');
+        return back()->with('success', 'Car saved');
     }
+
 
     public function updateLatestCar(Request $request, $id)
     {

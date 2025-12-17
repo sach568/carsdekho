@@ -12,15 +12,15 @@ use App\Http\Controllers\AdminDashboardController;
 |--------------------------------------------------------------------------
 */
 
-// ==================== PUBLIC ROUTES ====================
+// PUBLIC ROUTES
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/home', [HomeController::class, 'index']);
 
-// Task 1: Customer Form Routes
+// Customer Form Routes
 Route::get('/customer-form', [CustomerController::class, 'index'])->name('customer.form');
 Route::post('/customer-form', [CustomerController::class, 'store'])->name('customer.store');
 
-// ==================== ADMIN ROUTES (PROTECTED) ====================
+//ADMIN ROUTES (PROTECTED)
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'dashboard'])->name('admin.dashboard');

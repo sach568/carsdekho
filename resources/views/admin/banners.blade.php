@@ -2,6 +2,7 @@
 
 @section('content')
   <div class="container-fluid">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>Manage Banners</h2>
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBannerModal">
