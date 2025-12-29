@@ -1,7 +1,7 @@
-# Laravel Dockerfile for Render
+# Laravel Dockerfile for Render with MySQL
 FROM php:8.2-apache
 
-# Install system dependencies
+# Install system dependencies for MySQL
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -9,22 +9,24 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    libpq-dev \
+    default-mysql-client \
+    libicu-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
+# Install PHP extensions for MySQL
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
-    pdo_pgsql \
+    mysqli \
     mbstring \
     exif \
     pcntl \
     gd \
     zip \
     xml \
-    bcmath
+    bcmath \
+    intl
 
 # Enable Apache modules
 RUN a2enmod rewrite
