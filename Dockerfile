@@ -1,4 +1,4 @@
-# Base image with PHP + Apache
+# PHP 8.2 + Apache base image
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -30,7 +30,7 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port
+# Expose Apache port
 EXPOSE 80
 
 # Start Apache
