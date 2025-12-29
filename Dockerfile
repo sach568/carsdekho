@@ -1,32 +1,37 @@
+# Base image with PHP + Apache
 FROM php:8.2-apache
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    libonig-dev \
+    libpq-dev \
+    curl \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring
+
+# Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-RUN apt-get update && apt-get install -y \
-    git unzip zip libzip-dev
-
-RUN docker-php-ext-install pdo pdo_mysql zip
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
+# Set working directory
 WORKDIR /var/www/html
+
+# Copy project files
 COPY . .
 
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-RUN chown -R www-data:www-data /var/www/html
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-
-RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
-    /etc/apache2/sites-available/000-default.conf
-
-# 🔥 THIS IS THE MAGIC FIX
-RUN printf '<Directory /var/www/html/public>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>\n' > /etc/apache2/conf-available/laravel.conf \
- && a2enconf laravel
-
+# Expose port
 EXPOSE 80
+
+# Start Apache
+CMD ["apache2-foreground"]
