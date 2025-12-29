@@ -1,0 +1,17 @@
+.env
+.env.example
+.env.production
+.git/
+docker-compose*
+Dockerfile*
+node_modules/
+storage/app/public/*
+storage/debugbar/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+vendor/
+*.md
+README
+LICENSE

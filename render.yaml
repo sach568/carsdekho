@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: carsdekho-docker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://carsdekho-docker.onrender.com
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      # Add your generated APP_KEY here
+      # - key: APP_KEY
+      #   value: base64:your-key-here
+    healthCheckPath: /
+    autoDeploy: true
