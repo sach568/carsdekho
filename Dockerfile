@@ -1,43 +1,39 @@
-# PHP + Apache base image
 FROM php:8.2-apache
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libonig-dev libpq-dev curl \
-    libpng-dev libfreetype6-dev libjpeg62-turbo-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip mbstring gd exif \
+    libpng-dev libonig-dev libxml2-dev libzip-dev libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql mbstring gd zip \
     && a2enmod rewrite
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy only composer files first (for better caching)
-COPY composer.json composer.lock ./
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Install dependencies with memory limit
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-# Copy project files (after composer install for better caching)
+# Copy project
 COPY . .
 
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Install packages
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Set Apache DocumentRoot to public folder
-RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+# Configure Apache
+RUN echo 'ServerName localhost\n\
+<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html/public\n\
+    <Directory /var/www/html/public>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Create entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Expose Apache port
 EXPOSE 80
 
-# Use entrypoint script
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]
+# Start command
+CMD php artisan key:generate --force && \
+    php artisan config:cache && \
+    apache2-foreground
