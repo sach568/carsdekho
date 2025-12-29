@@ -14,14 +14,16 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/sites-available/000-default.conf
 
+# 🔥 THIS IS THE MAGIC FIX
 RUN printf '<Directory /var/www/html/public>\n\
+    Options Indexes FollowSymLinks\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>\n' > /etc/apache2/conf-available/laravel.conf \
