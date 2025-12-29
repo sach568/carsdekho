@@ -1,12 +1,22 @@
 FROM php:8.2-apache
 
-# Install dependencies including SQLite
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    libpng-dev libonig-dev libxml2-dev libzip-dev unzip curl sqlite3 \
+    libpng-dev libonig-dev libxml2-dev libzip-dev unzip curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions (SQLite के लिए)
-RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring zip bcmath exif
+# Install PHP extensions ONE BY ONE
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install mbstring
+RUN docker-php-ext-install zip
+RUN docker-php-ext-install bcmath
+RUN docker-php-ext-install exif
+
+# Install SQLite separately
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev \
+    && docker-php-ext-install pdo_sqlite \
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache
 RUN a2enmod rewrite
