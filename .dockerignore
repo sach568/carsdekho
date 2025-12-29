@@ -1,17 +1,57 @@
-.env
-.env.example
-.env.production
+# Ignore these files in Docker build
 .git/
-docker-compose*
-Dockerfile*
+.gitignore
+.gitattributes
+
+# Environment files (except example)
+.env
+.env.local
+.env.production
+.env.production.local
+*.env
+
+# Docker files
+docker-compose.yml
+docker-compose.*.yml
+docker-compose.override.yml
+Dockerfile*.backup
+
+# Node and build files
 node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Laravel specific
 storage/app/public/*
 storage/debugbar/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
-storage/logs/*
-vendor/
-*.md
-README
-LICENSE
+!storage/framework/.gitkeep
+bootstrap/cache/*
+
+# Vendor (will be installed fresh)
+/vendor/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Backup files
+*.backup
+*.bak
+
+# Test files
+/tests/
+.phpunit.result.cache

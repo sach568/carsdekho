@@ -1,80 +1,118 @@
 #!/bin/bash
 set -e
 
-echo "Starting Laravel application..."
+echo "=========================================="
+echo "🚀 Starting Laravel Application"
+echo "=========================================="
 
-# Generate APP_KEY if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
-    echo "Generating new APP_KEY..."
-    php artisan key:generate --force
+# Show current directory
+echo "📁 Working directory: $(pwd)"
+echo "📄 Files in directory:"
+ls -la
+
+# Step 1: Create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "📝 Creating .env file from .env.example..."
+    if [ -f .env.example ]; then
+        cp .env.example .env
+        echo "✅ .env file created successfully"
+    else
+        echo "❌ .env.example not found! Creating empty .env"
+        touch .env
+        echo "APP_NAME=Laravel" >> .env
+        echo "APP_ENV=production" >> .env
+        echo "APP_KEY=" >> .env
+        echo "APP_DEBUG=false" >> .env
+        echo "APP_URL=http://localhost" >> .env
+    fi
 else
-    echo "Using provided APP_KEY"
-    # Update .env with provided APP_KEY
+    echo "✅ .env file already exists"
+fi
+
+# Step 2: Set or generate APP_KEY
+if [ -z "${APP_KEY}" ] || [ "${APP_KEY}" = "" ] || [ "${APP_KEY}" = "base64:" ]; then
+    echo "🔑 Generating new APP_KEY..."
+    php artisan key:generate --force
+    echo "✅ APP_KEY generated successfully"
+else
+    echo "🔑 Setting APP_KEY from environment..."
+    # Update .env with the provided APP_KEY
     sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
+    echo "✅ APP_KEY set from environment variable"
 fi
 
-# Update .env with Render environment variables
-if [ ! -z "$APP_ENV" ]; then
-    sed -i "s|^APP_ENV=.*|APP_ENV=${APP_ENV}|" .env
-fi
+# Step 3: Update other environment variables
+echo "⚙️  Updating environment variables..."
 
-if [ ! -z "$APP_DEBUG" ]; then
-    sed -i "s|^APP_DEBUG=.*|APP_DEBUG=${APP_DEBUG}|" .env
-fi
+# Function to update env variable
+update_env() {
+    local key="$1"
+    local value="$2"
+    
+    if [ -n "${value}" ]; then
+        # Check if key exists in .env
+        if grep -q "^${key}=" .env; then
+            # Escape special characters for sed
+            ESCAPED_VALUE=$(echo "${value}" | sed 's/[\/&]/\\&/g')
+            sed -i "s|^${key}=.*|${key}=${ESCAPED_VALUE}|" .env
+        else
+            echo "${key}=${value}" >> .env
+        fi
+        echo "   ✅ ${key}=${value}"
+    fi
+}
 
-if [ ! -z "$APP_URL" ]; then
-    sed -i "s|^APP_URL=.*|APP_URL=${APP_URL}|" .env
-fi
+# Update common variables
+update_env "APP_ENV" "${APP_ENV}"
+update_env "APP_DEBUG" "${APP_DEBUG}"
+update_env "APP_URL" "${APP_URL}"
+update_env "LOG_CHANNEL" "${LOG_CHANNEL}"
+update_env "DB_CONNECTION" "${DB_CONNECTION:-pgsql}"
+update_env "DB_HOST" "${DB_HOST}"
+update_env "DB_PORT" "${DB_PORT:-5432}"
+update_env "DB_DATABASE" "${DB_DATABASE}"
+update_env "DB_USERNAME" "${DB_USERNAME}"
+update_env "DB_PASSWORD" "${DB_PASSWORD}"
 
-# Database configuration
-if [ ! -z "$DB_CONNECTION" ]; then
-    sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=${DB_CONNECTION}|" .env
-fi
+# Step 4: Show current .env config
+echo ""
+echo "=========================================="
+echo "📋 Current .env configuration:"
+echo "=========================================="
+grep -E "^(APP_|DB_|LOG_)" .env || cat .env
+echo ""
 
-if [ ! -z "$DB_HOST" ]; then
-    sed -i "s|^DB_HOST=.*|DB_HOST=${DB_HOST}|" .env
-fi
-
-if [ ! -z "$DB_PORT" ]; then
-    sed -i "s|^DB_PORT=.*|DB_PORT=${DB_PORT}|" .env
-fi
-
-if [ ! -z "$DB_DATABASE" ]; then
-    sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" .env
-fi
-
-if [ ! -z "$DB_USERNAME" ]; then
-    sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" .env
-fi
-
-if [ ! -z "$DB_PASSWORD" ]; then
-    sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" .env
-fi
-
-# 1. Project folder में जाएं
-cd /path/to/carsdekho
-
-# 2. नई files create करें
-touch .dockerignore docker-entrypoint.sh render.yaml
-
-# 3. Files को ऊपर दिए गए content से भरें
-
-# 4. APP_KEY generate करें
-cp .env.example .env.local
-php artisan key:generate --show
-# Output copy करें
-# Clear and cache config
+# Step 5: Clear caches
+echo "🧹 Clearing caches..."
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
+php artisan route:clear
+echo "✅ Caches cleared"
 
-# Run migrations
-php artisan migrate --force
+# Step 6: Run migrations (if not in testing)
+if [ "${APP_ENV}" != "testing" ] && [ -n "${DB_HOST}" ]; then
+    echo "🔄 Running database migrations..."
+    php artisan migrate --force || echo "⚠️  Migrations may have failed, continuing..."
+else
+    echo "⏭️  Skipping migrations"
+fi
 
-# Cache for production
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Step 7: Cache for production
+if [ "${APP_ENV}" = "production" ]; then
+    echo "⚡ Caching for production..."
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    echo "✅ Production caching completed"
+fi
 
-# Start Apache
-exec apache2-foreground "$@"
+# Step 8: Start Apache
+echo ""
+echo "=========================================="
+echo "🌐 Starting Apache Web Server..."
+echo "=========================================="
+echo "✅ Server is ready at: ${APP_URL}"
+echo ""
+
+exec apache2-foreground
