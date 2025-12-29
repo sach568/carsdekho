@@ -1,4 +1,3 @@
-# Ignore these files in Docker build
 .git/
 .gitignore
 .gitattributes

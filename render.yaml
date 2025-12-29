@@ -8,7 +8,7 @@ services:
     region: singapore
     branch: main
 
-    # Environment Variables (Render Dashboard mein bhi add karna)
+    # Environment Variables
     envVars:
       - key: APP_ENV
         value: production
@@ -18,28 +18,18 @@ services:
         value: https://carsdekho.onrender.com
       - key: LOG_CHANNEL
         value: stderr
-      # Database variables (PostgreSQL ke liye)
       - key: DB_CONNECTION
         value: pgsql
-      # APP_KEY yahan nahi, Render Dashboard mein manually add karna
+      - key: DB_HOST
+        value: dpg-d596ml75r7bs73936sm0-a
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: car_website
+      # Add these in Render Dashboard (not here for security)
+      # - key: DB_USERNAME
+      # - key: DB_PASSWORD
+      # - key: APP_KEY
 
-    # Auto-deploy settings
     autoDeploy: true
-
-    # Health check
     healthCheckPath: /
-    healthCheckTimeout: 30
-
-    # Build settings
-    buildFilter:
-      paths:
-        - /**
-      ignoredPaths:
-        - node_modules/**
-        - vendor/**
-        - storage/**
-
-    # Resource limits
-    resources:
-      memory: 512
-      cpu: 0.25
